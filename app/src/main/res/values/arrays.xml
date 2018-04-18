@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="anime_thumbnail">
+        <item>@drawable/boku_no_hero_no_academia</item>
+        <item>@drawable/death_note</item>
+        <item>@drawable/ergo_proxy</item>
+    </array>
+</resources>
