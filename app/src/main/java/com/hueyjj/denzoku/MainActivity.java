@@ -1,8 +1,15 @@
 package com.hueyjj.denzoku;
 
+import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,11 +21,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
+import com.hueyjj.denzoku.downloader.TorrentDownloader;
 import com.hueyjj.denzoku.network.MalNetworkRequest;
 import com.hueyjj.denzoku.network.NyaaNetworkRequest;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +69,74 @@ public class MainActivity extends AppCompatActivity
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NyaaNetworkRequest req = new NyaaNetworkRequest(getApplicationContext());
-                req.setQuery("Boku no hero academia");
-                req.build();
-                req.getNyaaList();
+                String url = "https://nyaa.si/download/1026506.torrent";
+                TorrentDownloader req = new TorrentDownloader(Request.Method.GET, url,
+                        new Response.Listener<byte[]>() {
+                            @Override
+                            public void onResponse(byte[] response) {
+                                // Write to file
+                                String filename = "TorrentExample.torrent";
+                                FileOutputStream outputstream;
+                                try {
+                                    outputstream = openFileOutput(filename, Context.MODE_PRIVATE);
+                                    outputstream.write(response);
+                                    outputstream.close();
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                Log.v(TAG, "Torrent download success");
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Log.v(TAG, "Error downloading torrent");
+                            }
+                        });
+                RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+                queue.add(req);
             }
         });
+
+        File fileDir = this.getFilesDir();
+        Log.v(TAG, "file directory: " + fileDir.getAbsolutePath());
+
+        File torrentFile = new File(this.getFilesDir(),"TorrentExample.torrent");
+        Log.v(TAG, "TorrentExample.torrent path: " + torrentFile.getPath());
+
+        if (torrentFile.exists()) {
+            Log.v(TAG, "TorrentExample.torrent file exists");
+            Uri path = FileProvider.getUriForFile(this,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    torrentFile);
+            Log.v(TAG, "URI: " + path.getPath());
+
+            // Try to get torrent mime type
+            ContentResolver cr = this.getContentResolver();
+            String mime = cr.getType(path);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(path, mime);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e)  {
+               Log.v(TAG, "No application found to Unable to open torrent");
+            }
+
+        }
+        //btn.setOnClickListener(new View.OnClickListener() {
+        //    @Override
+        //    public void onClick(View v) {
+        //        NyaaNetworkRequest req = new NyaaNetworkRequest(getApplicationContext());
+        //        req.setQuery("Boku no hero academia");
+        //        req.build();
+        //        req.getNyaaList();
+        //    }
+        //});
         //btn.setOnClickListener(new View.OnClickListener() {
         //    @Override
         //    public void onClick(View v) {
