@@ -33,6 +33,18 @@ public class MalEntry {
         this.seriesImage        = seriesImage;
     }
 
+    public String toFormattedString() {
+        return "series animedb id: " + this.seriesAnimedbId + "\n"
+                + "series title: " + this.seriesTitle + "\n"
+                + "series synonyms: " + this.seriesSynonyms + "\n"
+                + "series type: " + this.seriesType + "\n"
+                + "series episodes: " + this.seriesEpisodes + "\n"
+                + "series status: " + this.seriesStatus + "\n"
+                + "series start: " + this.seriesStart + "\n"
+                + "series end: " + this.seriesEnd + "\n"
+                + "series image: " + this.seriesImage + "\n";
+    }
+
     @Override
     public String toString() {
         return this.seriesAnimedbId + ", "

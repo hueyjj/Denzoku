@@ -28,7 +28,6 @@ public class MalParser {
             parser.nextTag();
             return readFeed(parser);
         } finally {
-            Log.v(TAG, "Failed to parse Mal list");
         }
     }
 

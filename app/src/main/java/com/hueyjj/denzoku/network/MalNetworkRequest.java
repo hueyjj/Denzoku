@@ -19,56 +19,47 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.List;
 
-public class MalNetworkRequest {
+public class MalNetworkRequest extends StringRequest {
 
     final String TAG = "MalNetworkRequest";
 
-    private String apiUrl;
-    private RequestQueue queue;
-    private StringRequest animeListRequest;
+    //private String apiUrl;
+    //private RequestQueue queue;
+    //private StringRequest animeListRequest;
 
-    public MalNetworkRequest(Context context, String username) {
-        System.out.println("username: " + username);
-        this.queue = Volley.newRequestQueue(context);
-        this.apiUrl = buildAPILink(username);
-        System.out.println("api url: " + this.apiUrl);
-        this.animeListRequest = new StringRequest(Request.Method.GET, this.apiUrl,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        //mTextView.setText("Response is: "+ response.substring(0,500));
-                        //System.out.println(response.length());
-                        //System.out.println(response);
-                        MalParser parser = new MalParser();
-                        try {
-                            List<MalEntry> result = parser.parse(response);
-                            for (MalEntry entry : result) {
-                                Log.v(TAG, entry.toString());
-                            }
-                        } catch (XmlPullParserException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        //mTextView.setText("That didn't work!");
-                        System.out.println("Failed to get anime list");
-                        System.out.println(error.getMessage());
-                    }
-                });
+    public MalNetworkRequest(String url, Response.Listener<String> onResponse, Response.ErrorListener onError) {
+        super(Request.Method.GET, url, onResponse, onError);
+
+        //this.queue = Volley.newRequestQueue(context);
+        //this.apiUrl = buildAPILink(username);
+        //this.animeListRequest = new StringRequest(Request.Method.GET, this.apiUrl, onResponse, onError);
+//        this.animeListRequest = new StringRequest(Request.Method.GET, this.apiUrl,
+//                new Response.Listener<String>() {
+//                    @Override
+//                    public void onResponse(String response) {
+//                        MalParser parser = new MalParser();
+//                        try {
+//                            List<MalEntry> result = parser.parse(response);
+//                            for (MalEntry entry : result) {
+//                                Log.v(TAG, entry.toFormattedString());
+//                            }
+//                        } catch (XmlPullParserException e) {
+//                            e.printStackTrace();
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        System.out.println("Failed to get anime list");
+//                        System.out.println(error.getMessage());
+//                    }
+//                });
     }
 
-    public String getAnimeList() {
-        this.queue.add(this.animeListRequest);
-        return null;
-    }
-
-    private String buildAPILink(String username) {
+    public static String createApiUrl(String username) {
         String userParam = "u=" + username;
         String statusParam = "status=all";
         String typeParam = "type=anime";

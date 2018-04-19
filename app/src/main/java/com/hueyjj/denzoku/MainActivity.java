@@ -54,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MalNetworkRequest req = new MalNetworkRequest(getApplicationContext(), "hueyjj");
-                req.getAnimeList();
+                //MalNetworkRequest req = new MalNetworkRequest(getApplicationContext(), "hueyjj");
+                //req.getAnimeList();
             }
         });
 
