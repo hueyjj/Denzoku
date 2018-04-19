@@ -1,6 +1,7 @@
 package com.hueyjj.denzoku.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -19,9 +20,8 @@ import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
-import com.hueyjj.denzoku.MainActivity;
+import com.hueyjj.denzoku.DetailActivity;
 import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.network.MalNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
@@ -50,6 +50,7 @@ public class AnimeListFragment extends Fragment {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        public MalEntry malEntry;
         public ImageView animeImage;
         public TextView animeTitle;
         public TextView description;
@@ -60,31 +61,40 @@ public class AnimeListFragment extends Fragment {
             animeTitle = (TextView) itemView.findViewById(R.id.anime_title);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    //Context context = v.getContext();
-                    //Intent intent = new Intent(context, DetailActivity.class);
-                    //intent.putExtra(DetailActivity.EXTRA_POSITION, getAdapterPosition());
-                    //context.startActivity(intent);
+                public void onClick(View view) {
+                    Context context = view.getContext();
+                    Intent intent = new Intent(context, DetailActivity.class);
+                    intent.putExtra(DetailActivity.MAL_ENTRY, malEntry);
+                    context.startActivity(intent);
                 }
             });
+        }
+
+        public void setMalEntry(MalEntry malEntry) {
+            this.malEntry = malEntry;
         }
     }
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
         final String TAG = "ContentAdapter";
 
+        /* Number of items */
         private int length = 0;
 
         //FIXME Should different objects have different queue or one global queue is better or...?
         public RequestQueue queue;
 
+        private ArrayList<MalEntry> malEntries;
         private ArrayList<String> animeTitles;
         private ArrayList<String> animeImages;
 
         public ContentAdapter(Context context) {
+            malEntries = new ArrayList<MalEntry>();
             animeTitles = new ArrayList<String>();
             animeImages = new ArrayList<String>();
 
             queue = Volley.newRequestQueue(context);
+
+            // TODO Cache mal data in the future, so we don't have to request it each time we open the anime list fragment
             String apiUrl = MalNetworkRequest.createApiUrl("hueyjj");
             MalNetworkRequest malReq = new MalNetworkRequest(apiUrl,
                     new Response.Listener<String>() {
@@ -108,11 +118,10 @@ public class AnimeListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            //holder.animeImage.setImageDrawable(animeImages[position % animeImages.length]);
             if (animeTitles.size() > 0) {
                 holder.animeTitle.setText(animeTitles.get(position % animeTitles.size()));
+                holder.setMalEntry(malEntries.get(position % malEntries.size()));
             }
-            Log.v(TAG, "View holder binded: " + holder.animeTitle.getText());
         }
 
         @Override
@@ -153,7 +162,7 @@ public class AnimeListFragment extends Fragment {
             return length;
         }
 
-        private void setLength(int length) {
+        private void setItemCount(int length) {
             this.length = length;
         }
 
@@ -162,10 +171,11 @@ public class AnimeListFragment extends Fragment {
             try {
                 List<MalEntry> result = parser.parse(response);
                 for (MalEntry entry : result) {
+                    malEntries.add(entry);
                     animeTitles.add(entry.seriesTitle);
                     animeImages.add(entry.seriesImage);
                 }
-                setLength(result.size());
+                setItemCount(result.size());
                 notifyDataSetChanged();
             } catch (XmlPullParserException e) {
                 e.printStackTrace();

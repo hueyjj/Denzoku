@@ -1,6 +1,8 @@
 package com.hueyjj.denzoku.parser;
 
-public class MalEntry {
+import java.io.Serializable;
+
+public class MalEntry implements Serializable {
 
     public final String seriesAnimedbId;
     public final String seriesTitle;
@@ -20,8 +22,7 @@ public class MalEntry {
                     String seriesStatus,
                     String seriesStart,
                     String seriesEnd,
-                    String seriesImage
-    ) {
+                    String seriesImage) {
         this.seriesAnimedbId    = seriesAnimedbId;
         this.seriesTitle        = seriesTitle;
         this.seriesSynonyms     = seriesSynonyms;
