@@ -50,14 +50,14 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        //fab.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View view) {
-        //        Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-        //                .setAction("Action", null).show();
-        //    }
-        //});
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MalNetworkRequest req = new MalNetworkRequest(getApplicationContext(), "hueyjj");
+                req.getAnimeList();
+            }
+        });
 
         mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         setupDrawerContent(navigationView);
-        //navigationView.setNavigationItemSelectedListener(this);
 
         //Button btn = findViewById(R.id.button);
         //btn.setOnClickListener(new View.OnClickListener() {
@@ -181,30 +180,6 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-//    @Override
-//    public boolean onNavigationItemSelected(MenuItem item) {
-//        // Handle navigation view item clicks here.
-//        int id = item.getItemId();
-
-//        if (id == R.id.nav_anime_list) {
-//            // Handle the camera action
-//        } else if (id == R.id.nav_airing) {
-
-//        } else if (id == R.id.nav_nyaa_rss) {
-
-//        } else if (id == R.id.nav_airing) {
-
-//        } else if (id == R.id.nav_about) {
-
-//        } else if (id == R.id.nav_setting) {
-
-//        }
-
-//        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-//        drawer.closeDrawer(GravityCompat.START);
-//        return true;
-//    }
 
     private void setupDrawerContent(NavigationView navigationView) {
         navigationView.setNavigationItemSelectedListener(

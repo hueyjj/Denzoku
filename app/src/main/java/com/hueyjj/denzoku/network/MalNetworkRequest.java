@@ -3,6 +3,7 @@ package com.hueyjj.denzoku.network;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -10,8 +11,17 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.hueyjj.denzoku.parser.MalEntry;
+import com.hueyjj.denzoku.parser.MalParser;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.List;
 
 public class MalNetworkRequest {
+
+    final String TAG = "MalNetworkRequest";
 
     private String apiUrl;
     private RequestQueue queue;
@@ -28,8 +38,19 @@ public class MalNetworkRequest {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         //mTextView.setText("Response is: "+ response.substring(0,500));
-                        System.out.println(response.length());
-                        System.out.println(response);
+                        //System.out.println(response.length());
+                        //System.out.println(response);
+                        MalParser parser = new MalParser();
+                        try {
+                            List<MalEntry> result = parser.parse(response);
+                            for (MalEntry entry : result) {
+                                Log.v(TAG, entry.toString());
+                            }
+                        } catch (XmlPullParserException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 },
                 new Response.ErrorListener() {
