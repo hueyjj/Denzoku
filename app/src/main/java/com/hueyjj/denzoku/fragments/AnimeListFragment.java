@@ -26,6 +26,7 @@ import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.network.MalNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
 import com.hueyjj.denzoku.parser.MalParser;
+import com.squareup.picasso.Picasso;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -71,26 +72,19 @@ public class AnimeListFragment extends Fragment {
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
         final String TAG = "ContentAdapter";
 
-        private static final int LENGTH = 18;
+        private int length = 0;
 
         //FIXME Should different objects have different queue or one global queue is better or...?
         public RequestQueue queue;
 
         private ArrayList<String> animeTitles;
         private ArrayList<String> animeImages;
-        //private final Drawable[] animeImages;
 
         public ContentAdapter(Context context) {
             animeTitles = new ArrayList<String>();
             animeImages = new ArrayList<String>();
 
             queue = Volley.newRequestQueue(context);
-            //Resources resources = context.getResources();
-            //TypedArray a = resources.obtainTypedArray(R.array.anime_thumbnail);
-            //animeImages = new Drawable[a.length()];
-            //for (int i = 0; i < animeImages.length; i++) {
-            //    animeImages[i] = a.getDrawable(i);
-            //}
             String apiUrl = MalNetworkRequest.createApiUrl("hueyjj");
             MalNetworkRequest malReq = new MalNetworkRequest(apiUrl,
                     new Response.Listener<String>() {
@@ -105,7 +99,6 @@ public class AnimeListFragment extends Fragment {
                         }
                     });
             queue.add(malReq);
-            //a.recycle();
         }
 
         @Override
@@ -119,6 +112,7 @@ public class AnimeListFragment extends Fragment {
             if (animeTitles.size() > 0) {
                 holder.animeTitle.setText(animeTitles.get(position % animeTitles.size()));
             }
+            Log.v(TAG, "View holder binded: " + holder.animeTitle.getText());
         }
 
         @Override
@@ -127,30 +121,40 @@ public class AnimeListFragment extends Fragment {
                 return;
             }
 
-            ImageRequest imageRequest = new ImageRequest(
-                    animeImages.get(holder.getLayoutPosition() % animeImages.size()),
-                    new Response.Listener<Bitmap>() {
-                        @Override
-                        public void onResponse(Bitmap response) {
-                            holder.animeImage.setImageBitmap(response);
-                        }
-                    },
-                    0, 0,
-                    ImageView.ScaleType.CENTER_CROP,
-                    Bitmap.Config.RGB_565,
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.v(TAG, "Unable to download image for " + holder.animeTitle.getText());
-                        }
-                    }
-            );
-            this.queue.add(imageRequest);
+            // TODO Research more on the implementation of Picassos' caching
+            Picasso.get()
+                    .load(animeImages.get(holder.getAdapterPosition() % animeImages.size()))
+                    .into(holder.animeImage);
+
+            //ImageRequest imageRequest = new ImageRequest(
+            //        animeImages.get(holder.getAdapterPosition() % animeImages.size()),
+            //        new Response.Listener<Bitmap>() {
+            //            @Override
+            //            public void onResponse(Bitmap response) {
+            //                holder.animeImage.setImageBitmap(response);
+            //                Log.v(TAG, "Image set for " + holder.animeTitle.getText());
+            //            }
+            //        },
+            //        0, 0,
+            //        ImageView.ScaleType.CENTER_CROP,
+            //        Bitmap.Config.RGB_565,
+            //        new Response.ErrorListener() {
+            //            @Override
+            //            public void onErrorResponse(VolleyError error) {
+            //                Log.v(TAG, "Unable to download image for " + holder.animeTitle.getText());
+            //            }
+            //        }
+            //);
+            //this.queue.add(imageRequest);
         }
 
         @Override
         public int getItemCount() {
-            return LENGTH;
+            return length;
+        }
+
+        private void setLength(int length) {
+            this.length = length;
         }
 
         private void initData(String response) {
@@ -161,6 +165,7 @@ public class AnimeListFragment extends Fragment {
                     animeTitles.add(entry.seriesTitle);
                     animeImages.add(entry.seriesImage);
                 }
+                setLength(result.size());
                 notifyDataSetChanged();
             } catch (XmlPullParserException e) {
                 e.printStackTrace();
