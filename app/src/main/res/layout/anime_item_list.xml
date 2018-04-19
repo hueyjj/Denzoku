@@ -22,6 +22,6 @@
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
         android:layout_marginStart="17dp"
-        android:contentDescription="Boku no hero acaddemia"
-        app:srcCompat="@drawable/boku_no_hero_no_academia"/>
+        android:contentDescription="Boku no hero academia"
+        />
 </RelativeLayout>
