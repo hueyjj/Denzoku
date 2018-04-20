@@ -1,9 +1,16 @@
 package com.hueyjj.denzoku;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.hueyjj.denzoku.fragments.NyaaListFragment;
 import com.hueyjj.denzoku.parser.MalEntry;
@@ -22,11 +29,11 @@ public class NyaaActivity extends AppCompatActivity {
 
         malEntry = (MalEntry) getIntent().getSerializableExtra(MAL_ENTRY);
 
+        Bundle bundle = getIntent().getExtras();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setTitle("Nyaa: " + malEntry.seriesTitle);
+        getSupportActionBar().setTitle("Nyaa: " + malEntry.seriesTitle + " " + bundle.get(EPISODE_NUM));
 
-        Bundle bundle = getIntent().getExtras();
 
         NyaaListFragment nyaaListFragment = new NyaaListFragment();
         nyaaListFragment.setArguments(bundle);
@@ -34,6 +41,40 @@ public class NyaaActivity extends AppCompatActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.flContent, nyaaListFragment).commit();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_nyaa_search, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView = (SearchView) menu.findItem(R.id.nyaa_search).getActionView();
+
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(false);
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Show options for search
+            }
+        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.v(TAG, "Search query: " + query);
+                menu.findItem(R.id.nyaa_search).collapseActionView();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        return true;
     }
 
     @Override

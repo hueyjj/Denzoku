@@ -34,6 +34,8 @@
         </activity>
         <activity android:name=".NyaaActivity">
         </activity>
+        <activity android:name=".NyaaSearchActivity">
+        </activity>
     </application>
 
 </manifest>

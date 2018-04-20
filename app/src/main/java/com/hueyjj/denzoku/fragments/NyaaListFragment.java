@@ -11,25 +11,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.hueyjj.denzoku.DetailActivity;
 import com.hueyjj.denzoku.NyaaActivity;
 import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.parser.MalEntry;
+import com.hueyjj.denzoku.parser.NyaaResult;
+
+import java.util.ArrayList;
 
 public class NyaaListFragment extends Fragment {
 
     public final String TAG = "NyaaListFragment";
-    private MalEntry malEntry;
+    private ArrayList<NyaaResult> nyaaResult;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        malEntry = (MalEntry) getArguments().get(NyaaActivity.MAL_ENTRY);
+//        nyaaResult = (MalEntry) getArguments().get(NyaaActivity.MAL_ENTRY);
 
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
 
-        ContentAdapter adapter = new ContentAdapter(recyclerView.getContext(), malEntry);
+        ContentAdapter adapter = new ContentAdapter(recyclerView.getContext(), null);
 
         int episodeNum = (int) getArguments().get(NyaaActivity.EPISODE_NUM);
         Log.v(TAG, "Searching for episode number " + episodeNum);
@@ -42,16 +44,26 @@ public class NyaaListFragment extends Fragment {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView nyaaItem;
+        public TextView animeEpisode;
+        public MalEntry malEntry;
+        private int episodeNum;
 
-        public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.nyaa_search_list, parent, false));
-            nyaaItem = (TextView) itemView.findViewById(R.id.nyaa_item);
+        ViewHolder(LayoutInflater inflater, ViewGroup parent) {
+            super(inflater.inflate(R.layout.anime_episode_item_list, parent, false));
+            animeEpisode = (TextView) itemView.findViewById(R.id.episode);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                 }
             });
+        }
+
+        public void setMalEntry(MalEntry malEntry) {
+            this.malEntry = malEntry;
+        }
+
+        public void setEpisodeNum(int episodeNum) {
+            this.episodeNum = episodeNum;
         }
     }
 
@@ -67,7 +79,7 @@ public class NyaaListFragment extends Fragment {
             this.malEntry = malEntry;
 
             try {
-                length = Integer.parseInt(malEntry.seriesEpisodes);
+                //length = Integer.parseInt(malEntry.seriesEpisodes);
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
@@ -80,9 +92,11 @@ public class NyaaListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            if (position < length) {
-                holder.nyaaItem.setText("");
-            }
+            //if (position < length) {
+            //    holder.animeEpisode.setText(malEntry.seriesTitle + " " + position);
+            //    holder.setMalEntry(malEntry);
+            //    holder.setEpisodeNum(position);
+            //}
         }
 
         @Override
