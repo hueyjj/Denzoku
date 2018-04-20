@@ -1,39 +1,39 @@
 package com.hueyjj.denzoku;
 
-import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.MenuItem;
 
-import com.hueyjj.denzoku.fragments.EpisodeListFragment;
+import com.hueyjj.denzoku.fragments.NyaaListFragment;
 import com.hueyjj.denzoku.parser.MalEntry;
 
-public class DetailActivity extends AppCompatActivity {
+public class NyaaActivity extends AppCompatActivity {
 
     public static final String TAG = "DetailActivity";
     public static final String MAL_ENTRY = "MAL_ENTRY";
+    public static final String EPISODE_NUM = "EPISODE_NUM";
     public MalEntry malEntry;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail);
+        setContentView(R.layout.activity_nyaa);
 
         malEntry = (MalEntry) getIntent().getSerializableExtra(MAL_ENTRY);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setTitle(malEntry.seriesTitle);
+        getSupportActionBar().setTitle("Nyaa: " + malEntry.seriesTitle);
 
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(MAL_ENTRY, malEntry);
+        Bundle bundle = getIntent().getExtras();
 
-        EpisodeListFragment episodeListFragment = new EpisodeListFragment();
-        episodeListFragment.setArguments(bundle);
+        NyaaListFragment nyaaListFragment = new NyaaListFragment();
+        nyaaListFragment.setArguments(bundle);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, episodeListFragment).commit();
+        fragmentManager.beginTransaction().replace(R.id.flContent, nyaaListFragment).commit();
+
     }
 
     @Override
@@ -43,6 +43,6 @@ public class DetailActivity extends AppCompatActivity {
                 finish();
                 return true;
         }
-       return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -61,8 +61,8 @@ public class AnimeListFragment extends Fragment {
             animeTitle = (TextView) itemView.findViewById(R.id.anime_title);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-                    Context context = view.getContext();
+                public void onClick(View v) {
+                    Context context = v.getContext();
                     Intent intent = new Intent(context, DetailActivity.class);
                     intent.putExtra(DetailActivity.MAL_ENTRY, malEntry);
                     context.startActivity(intent);
@@ -76,7 +76,7 @@ public class AnimeListFragment extends Fragment {
     }
 
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
-        final String TAG = "ContentAdapter";
+        final String TAG = "AnimeContentAdapter";
 
         /* Number of items */
         private int length = 0;

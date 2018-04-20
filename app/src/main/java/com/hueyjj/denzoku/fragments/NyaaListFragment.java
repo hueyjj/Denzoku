@@ -1,51 +1,38 @@
 package com.hueyjj.denzoku.fragments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
 import com.hueyjj.denzoku.DetailActivity;
 import com.hueyjj.denzoku.NyaaActivity;
 import com.hueyjj.denzoku.R;
-import com.hueyjj.denzoku.network.MalNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
-import com.hueyjj.denzoku.parser.MalParser;
-import com.squareup.picasso.Picasso;
 
-import org.xmlpull.v1.XmlPullParserException;
+public class NyaaListFragment extends Fragment {
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-public class EpisodeListFragment extends Fragment {
-
-    private final String TAG = "EpisodeListFragment";
+    public final String TAG = "NyaaListFragment";
     private MalEntry malEntry;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        malEntry = (MalEntry) getArguments().get(DetailActivity.MAL_ENTRY);
+        malEntry = (MalEntry) getArguments().get(NyaaActivity.MAL_ENTRY);
 
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
 
         ContentAdapter adapter = new ContentAdapter(recyclerView.getContext(), malEntry);
+
+        int episodeNum = (int) getArguments().get(NyaaActivity.EPISODE_NUM);
+        Log.v(TAG, "Searching for episode number " + episodeNum);
 
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -55,36 +42,21 @@ public class EpisodeListFragment extends Fragment {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView animeEpisode;
-        public MalEntry malEntry;
-        private int episodeNum;
+        public TextView nyaaItem;
 
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.anime_episode_item_list, parent, false));
-            animeEpisode = (TextView) itemView.findViewById(R.id.episode);
+            super(inflater.inflate(R.layout.nyaa_search_list, parent, false));
+            nyaaItem = (TextView) itemView.findViewById(R.id.nyaa_item);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, NyaaActivity.class);
-                    intent.putExtra(NyaaActivity.MAL_ENTRY, malEntry);
-                    intent.putExtra(NyaaActivity.EPISODE_NUM, episodeNum);
-                    context.startActivity(intent);
                 }
             });
-        }
-
-        public void setMalEntry(MalEntry malEntry) {
-            this.malEntry = malEntry;
-        }
-
-        public void setEpisodeNum(int episodeNum) {
-            this.episodeNum = episodeNum;
         }
     }
 
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
-        final String TAG = "EpisodeContentAdapter";
+        public final String TAG = "NyaaContentAdapter";
 
         /* Number of items */
         private int length = 0;
@@ -109,9 +81,7 @@ public class EpisodeListFragment extends Fragment {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             if (position < length) {
-                holder.animeEpisode.setText(malEntry.seriesTitle + " " + position);
-                holder.setMalEntry(malEntry);
-                holder.setEpisodeNum(position);
+                holder.nyaaItem.setText("");
             }
         }
 
