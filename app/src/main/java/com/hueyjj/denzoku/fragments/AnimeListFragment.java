@@ -1,8 +1,10 @@
 package com.hueyjj.denzoku.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,7 +17,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
+import com.hueyjj.denzoku.DetailActivity;
 import com.hueyjj.denzoku.R;
+import com.hueyjj.denzoku.network.MalNetworkRequest;
+import com.hueyjj.denzoku.parser.MalEntry;
+import com.hueyjj.denzoku.parser.MalParser;
+import com.squareup.picasso.Picasso;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AnimeListFragment extends Fragment {
     private final String TAG = "AnimeListFragment";
@@ -23,9 +40,6 @@ public class AnimeListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //View view = inflater.inflate(R.layout.fragment_anime_list,
-        //        container, false);
-
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
         ContentAdapter adapter = new ContentAdapter(recyclerView.getContext());
@@ -36,45 +50,66 @@ public class AnimeListFragment extends Fragment {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView animeThumbnail;
+        public MalEntry malEntry;
+        public ImageView animeImage;
         public TextView animeTitle;
         public TextView description;
+
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.anime_item_list, parent, false));
-            animeThumbnail = (ImageView) itemView.findViewById(R.id.anime_thumbnail);
+            animeImage = (ImageView) itemView.findViewById(R.id.anime_thumbnail);
             animeTitle = (TextView) itemView.findViewById(R.id.anime_title);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    //Context context = v.getContext();
-                    //Intent intent = new Intent(context, DetailActivity.class);
-                    //intent.putExtra(DetailActivity.EXTRA_POSITION, getAdapterPosition());
-                    //context.startActivity(intent);
+                public void onClick(View view) {
+                    Context context = view.getContext();
+                    Intent intent = new Intent(context, DetailActivity.class);
+                    intent.putExtra(DetailActivity.MAL_ENTRY, malEntry);
+                    context.startActivity(intent);
                 }
             });
         }
-    }
-    public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
-        private static final int LENGTH = 18;
 
-        private final String[] animeTitles;
-        private final Drawable[] animeThumbnails;
+        public void setMalEntry(MalEntry malEntry) {
+            this.malEntry = malEntry;
+        }
+    }
+
+    public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
+        final String TAG = "ContentAdapter";
+
+        /* Number of items */
+        private int length = 0;
+
+        //FIXME Should different objects have different queue or one global queue is better or...?
+        public RequestQueue queue;
+
+        private ArrayList<MalEntry> malEntries;
+        private ArrayList<String> animeTitles;
+        private ArrayList<String> animeImages;
 
         public ContentAdapter(Context context) {
-            Resources resources = context.getResources();
+            malEntries = new ArrayList<MalEntry>();
+            animeTitles = new ArrayList<String>();
+            animeImages = new ArrayList<String>();
 
-            animeTitles = new String[] {
-                    "Boku no Hero Academia",
-                    "Ergo Proxy",
-                    "Death Note",
-            };
+            queue = Volley.newRequestQueue(context);
 
-            TypedArray a = resources.obtainTypedArray(R.array.anime_thumbnail);
-            animeThumbnails = new Drawable[a.length()];
-            for (int i = 0; i < animeThumbnails.length; i++) {
-                animeThumbnails[i] = a.getDrawable(i);
-            }
-            a.recycle();
+            // TODO Cache mal data in the future, so we don't have to request it each time we open the anime list fragment
+            String apiUrl = MalNetworkRequest.createApiUrl("hueyjj");
+            MalNetworkRequest malReq = new MalNetworkRequest(apiUrl,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            initData(response);
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                        }
+                    });
+            queue.add(malReq);
         }
 
         @Override
@@ -84,13 +119,70 @@ public class AnimeListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.animeThumbnail.setImageDrawable(animeThumbnails[position % animeThumbnails.length]);
-            holder.animeTitle.setText(animeTitles[position % animeTitles.length]);
+            if (animeTitles.size() > 0) {
+                holder.animeTitle.setText(animeTitles.get(position % animeTitles.size()));
+                holder.setMalEntry(malEntries.get(position % malEntries.size()));
+            }
+        }
+
+        @Override
+        public void onViewAttachedToWindow(final ViewHolder holder) {
+            if (animeImages.size() <= 0) {
+                return;
+            }
+
+            // TODO Research more on the implementation of Picassos' caching
+            Picasso.get()
+                    .load(animeImages.get(holder.getAdapterPosition() % animeImages.size()))
+                    .into(holder.animeImage);
+
+            //ImageRequest imageRequest = new ImageRequest(
+            //        animeImages.get(holder.getAdapterPosition() % animeImages.size()),
+            //        new Response.Listener<Bitmap>() {
+            //            @Override
+            //            public void onResponse(Bitmap response) {
+            //                holder.animeImage.setImageBitmap(response);
+            //                Log.v(TAG, "Image set for " + holder.animeTitle.getText());
+            //            }
+            //        },
+            //        0, 0,
+            //        ImageView.ScaleType.CENTER_CROP,
+            //        Bitmap.Config.RGB_565,
+            //        new Response.ErrorListener() {
+            //            @Override
+            //            public void onErrorResponse(VolleyError error) {
+            //                Log.v(TAG, "Unable to download image for " + holder.animeTitle.getText());
+            //            }
+            //        }
+            //);
+            //this.queue.add(imageRequest);
         }
 
         @Override
         public int getItemCount() {
-            return LENGTH;
+            return length;
+        }
+
+        private void setItemCount(int length) {
+            this.length = length;
+        }
+
+        private void initData(String response) {
+            MalParser parser = new MalParser();
+            try {
+                List<MalEntry> result = parser.parse(response);
+                for (MalEntry entry : result) {
+                    malEntries.add(entry);
+                    animeTitles.add(entry.seriesTitle);
+                    animeImages.add(entry.seriesImage);
+                }
+                setItemCount(result.size());
+                notifyDataSetChanged();
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
