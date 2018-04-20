@@ -14,6 +14,8 @@ import android.view.View;
 
 import com.hueyjj.denzoku.fragments.NyaaListFragment;
 import com.hueyjj.denzoku.parser.MalEntry;
+import com.hueyjj.denzoku.parser.NyaaQuery;
+import com.hueyjj.denzoku.parser.NyaaQueryBuilder;
 
 public class NyaaActivity extends AppCompatActivity {
 
@@ -21,6 +23,7 @@ public class NyaaActivity extends AppCompatActivity {
     public static final String MAL_ENTRY = "MAL_ENTRY";
     public static final String EPISODE_NUM = "EPISODE_NUM";
     public MalEntry malEntry;
+    public NyaaListFragment nyaaListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +38,7 @@ public class NyaaActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("Nyaa: " + malEntry.seriesTitle + " " + bundle.get(EPISODE_NUM));
 
 
-        NyaaListFragment nyaaListFragment = new NyaaListFragment();
+        nyaaListFragment = new NyaaListFragment();
         nyaaListFragment.setArguments(bundle);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -65,6 +68,15 @@ public class NyaaActivity extends AppCompatActivity {
             public boolean onQueryTextSubmit(String query) {
                 Log.v(TAG, "Search query: " + query);
                 menu.findItem(R.id.nyaa_search).collapseActionView();
+
+                // TODO Set options here in builder
+                NyaaQuery nyaaQuery = new NyaaQueryBuilder()
+                        .query(query)
+                        .sort(NyaaQuery.Sort.SEEDERS)
+                        .pageNum("0")
+                        .buildNyaaQuery();
+                nyaaListFragment.setNewAdapterData(nyaaQuery.toString());
+
                 return false;
             }
 

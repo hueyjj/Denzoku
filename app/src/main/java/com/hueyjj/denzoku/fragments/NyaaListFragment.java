@@ -11,8 +11,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.hueyjj.denzoku.NyaaActivity;
 import com.hueyjj.denzoku.R;
+import com.hueyjj.denzoku.network.NyaaNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
 import com.hueyjj.denzoku.parser.NyaaResult;
 
@@ -22,6 +29,7 @@ public class NyaaListFragment extends Fragment {
 
     public final String TAG = "NyaaListFragment";
     private ArrayList<NyaaResult> nyaaResult;
+    private ContentAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -31,7 +39,7 @@ public class NyaaListFragment extends Fragment {
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
 
-        ContentAdapter adapter = new ContentAdapter(recyclerView.getContext(), null);
+        adapter = new ContentAdapter(recyclerView.getContext(), null);
 
         int episodeNum = (int) getArguments().get(NyaaActivity.EPISODE_NUM);
         Log.v(TAG, "Searching for episode number " + episodeNum);
@@ -41,6 +49,10 @@ public class NyaaListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         return recyclerView;
+    }
+
+    public void setNewAdapterData(String query) {
+        adapter.submitQuery(query);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -70,12 +82,17 @@ public class NyaaListFragment extends Fragment {
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
         public final String TAG = "NyaaContentAdapter";
 
+        //FIXME Should different objects have different queue or one global queue is better or...?
+        public RequestQueue queue;
+
         /* Number of items */
         private int length = 0;
 
         private MalEntry malEntry;
 
         public ContentAdapter(Context context, MalEntry malEntry) {
+            queue = Volley.newRequestQueue(context);
+
             this.malEntry = malEntry;
 
             try {
@@ -110,6 +127,26 @@ public class NyaaListFragment extends Fragment {
 
         private void setLength(int length) {
             this.length = length;
+        }
+
+
+        public void submitQuery (String query) {
+            NyaaNetworkRequest nyaaRequest = new NyaaNetworkRequest(Request.Method.GET, query,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Log.v(TAG, "" + response.length());
+                            Log.v(TAG, response);
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.v(TAG, "Failed to get nyaa list");
+                            Log.v(TAG, error.getMessage());
+                        }
+                    });
+            queue.add(nyaaRequest);
         }
     }
 }

@@ -27,8 +27,8 @@ public class MalNetworkRequest extends StringRequest {
     //private RequestQueue queue;
     //private StringRequest animeListRequest;
 
-    public MalNetworkRequest(String url, Response.Listener<String> onResponse, Response.ErrorListener onError) {
-        super(Request.Method.GET, url, onResponse, onError);
+    public MalNetworkRequest(String url, Response.Listener<String> listener, Response.ErrorListener errorListener) {
+        super(Request.Method.GET, url, listener, errorListener);
 
         //this.queue = Volley.newRequestQueue(context);
         //this.apiUrl = buildAPILink(username);
@@ -59,6 +59,7 @@ public class MalNetworkRequest extends StringRequest {
 //                });
     }
 
+    // FIXME Remove this method and switch to builder pattern (see: NyaaQueryBuilder)
     public static String createApiUrl(String username) {
         String userParam = "u=" + username;
         String statusParam = "status=all";
