@@ -3,8 +3,10 @@ package com.hueyjj.denzoku.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +17,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.hueyjj.denzoku.DetailActivity;
 import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.network.MalNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
@@ -30,16 +33,22 @@ import java.util.List;
 public class EpisodeListFragment extends Fragment {
 
     private final String TAG = "EpisodeListFragment";
+    private MalEntry malEntry;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        malEntry = (MalEntry) getArguments().get(DetailActivity.MAL_ENTRY);
+
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
-        ContentAdapter adapter = new ContentAdapter(recyclerView.getContext());
+
+        ContentAdapter adapter = new ContentAdapter(recyclerView.getContext(), malEntry);
+
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
         return recyclerView;
     }
 
@@ -47,15 +56,12 @@ public class EpisodeListFragment extends Fragment {
         public TextView animeEpisode;
 
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.episode_list, parent, false));
-            animeEpisode = (TextView) itemView.findViewById(R.id.anime_episode);
+            super(inflater.inflate(R.layout.anime_episode_item_list, parent, false));
+            animeEpisode = (TextView) itemView.findViewById(R.id.episode);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //Context context = v.getContext();
-                    //Intent intent = new Intent(context, DetailActivity.class);
-                    //intent.putExtra(DetailActivity.EXTRA_POSITION, getAdapterPosition());
-                    //context.startActivity(intent);
+                    // TODO Start nyaa search
                 }
             });
         }
@@ -68,11 +74,16 @@ public class EpisodeListFragment extends Fragment {
          */
         private int length = 0;
 
-        private ArrayList<String> animeEpisodes;
+        private MalEntry malEntry;
 
-        public ContentAdapter(Context context) {
-            animeEpisodes = new ArrayList<String>();
+        public ContentAdapter(Context context, MalEntry malEntry) {
+            this.malEntry = malEntry;
 
+            try {
+                length = Integer.parseInt(malEntry.seriesEpisodes);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -82,6 +93,9 @@ public class EpisodeListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
+            if (position < length) {
+                holder.animeEpisode.setText(malEntry.seriesTitle + " " + position);
+            }
         }
 
         @Override

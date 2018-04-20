@@ -74,6 +74,7 @@ public class AnimeListFragment extends Fragment {
             this.malEntry = malEntry;
         }
     }
+
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> { // Set numbers of List in RecyclerView.
         final String TAG = "ContentAdapter";
 
