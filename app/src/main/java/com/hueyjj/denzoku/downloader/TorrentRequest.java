@@ -8,11 +8,11 @@ import com.android.volley.toolbox.HttpHeaderParser;
 
 import java.util.Map;
 
-public class TorrentDownloader extends Request<byte[]> {
+public class TorrentRequest extends Request<byte[]> {
     private final Response.Listener<byte[]> listener;
 
-    public TorrentDownloader(int method, String url, Response.Listener<byte[]> listener,
-                             Response.ErrorListener errorListener) {
+    public TorrentRequest(int method, String url, Response.Listener<byte[]> listener,
+                          Response.ErrorListener errorListener) {
         super(method, url, errorListener);
 
         setShouldCache(false);

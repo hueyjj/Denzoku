@@ -1,8 +1,13 @@
 package com.hueyjj.denzoku.fragments;
 
+import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -15,20 +20,21 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.hueyjj.denzoku.NyaaActivity;
+import com.hueyjj.denzoku.BuildConfig;
 import com.hueyjj.denzoku.R;
+import com.hueyjj.denzoku.downloader.TorrentRequest;
 import com.hueyjj.denzoku.network.NyaaNetworkRequest;
-import com.hueyjj.denzoku.parser.MalEntry;
 import com.hueyjj.denzoku.parser.NyaaParser;
 import com.hueyjj.denzoku.parser.NyaaResult;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class NyaaListFragment extends Fragment {
 
@@ -44,10 +50,7 @@ public class NyaaListFragment extends Fragment {
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
 
-        adapter = new ContentAdapter(recyclerView.getContext(), null);
-
-        int episodeNum = (int) getArguments().get(NyaaActivity.EPISODE_NUM);
-        Log.v(TAG, "Searching for episode number " + episodeNum);
+        adapter = new ContentAdapter(recyclerView.getContext());
 
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -61,26 +64,80 @@ public class NyaaListFragment extends Fragment {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView animeEpisode;
-        public MalEntry malEntry;
-        private int episodeNum;
+        private RequestQueue queue;
+
+        private NyaaResult nyaaResult;
+
+        public TextView title;
+        public TextView seeders;
 
         ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.anime_episode_item_list, parent, false));
-            animeEpisode = (TextView) itemView.findViewById(R.id.episode);
+            super(inflater.inflate(R.layout.nyaa_result_list, parent, false));
+            title = (TextView) itemView.findViewById(R.id.title);
+            seeders = (TextView) itemView.findViewById(R.id.seeders);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    final Context context = v.getContext();
+
+                    final Context appContext = context.getApplicationContext();
+
+                    // Download torrent file
+                    TorrentRequest torrentRequest = new TorrentRequest(Request.Method.GET, nyaaResult.torrentLink,
+                            new Response.Listener<byte[]>() {
+                                @Override
+                                public void onResponse(byte[] response) {
+                                    // Save torrent file
+                                    String filename = nyaaResult.title + ".torrent";
+                                    FileOutputStream outputstream;
+                                    try {
+                                        outputstream = appContext.openFileOutput(filename, Context.MODE_PRIVATE);
+                                        outputstream.write(response);
+                                        outputstream.close();
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    File torrentFile = new File(appContext.getFilesDir(), filename);
+
+                                    // Open torrent file in another application
+                                    Uri path = FileProvider.getUriForFile(appContext,
+                                            BuildConfig.APPLICATION_ID + ".provider",
+                                            torrentFile);
+
+                                    // Get torrent mime type
+                                    ContentResolver cr = appContext.getContentResolver();
+                                    String mime = cr.getType(path);
+
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    intent.setDataAndType(path, mime);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    try {
+                                        context.getApplicationContext().startActivity(intent);
+                                    } catch (ActivityNotFoundException e) {
+                                        //Log.v(TAG, "No application found to Unable to open torrent");
+                                    }
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    //Log.v(TAG, "Error downloading torrent");
+                                }
+                            });
+                    queue.add(torrentRequest);
                 }
             });
         }
 
-        public void setMalEntry(MalEntry malEntry) {
-            this.malEntry = malEntry;
+        public void setNyaaResult(NyaaResult nyaaResult) {
+            this.nyaaResult = nyaaResult;
         }
 
-        public void setEpisodeNum(int episodeNum) {
-            this.episodeNum = episodeNum;
+        public void setRequestQueue(RequestQueue queue) {
+            this.queue = queue;
         }
     }
 
@@ -90,21 +147,12 @@ public class NyaaListFragment extends Fragment {
         //FIXME Should different objects have different queue or one global queue is better or...?
         public RequestQueue queue;
 
-        /* Number of items */
-        private int length = 0;
+        private ArrayList<NyaaResult> nyaaResults;
 
-        private MalEntry malEntry;
-
-        public ContentAdapter(Context context, MalEntry malEntry) {
+        public ContentAdapter(Context context) {
             queue = Volley.newRequestQueue(context);
 
-            this.malEntry = malEntry;
-
-            try {
-                //length = Integer.parseInt(malEntry.seriesEpisodes);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
+            nyaaResults = new ArrayList<NyaaResult>();
         }
 
         @Override
@@ -114,11 +162,13 @@ public class NyaaListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            //if (position < length) {
-            //    holder.animeEpisode.setText(malEntry.seriesTitle + " " + position);
-            //    holder.setMalEntry(malEntry);
-            //    holder.setEpisodeNum(position);
-            //}
+            if (getItemCount() > 0) {
+                NyaaResult nyaaResult = nyaaResults.get(position % nyaaResults.size());
+                holder.title.setText(nyaaResult.title);
+                holder.seeders.setText(nyaaResult.seeders);
+                holder.setNyaaResult(nyaaResult);
+                holder.setRequestQueue(queue);
+            }
         }
 
         @Override
@@ -127,26 +177,18 @@ public class NyaaListFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return length;
+            return nyaaResults.size();
         }
 
-        private void setLength(int length) {
-            this.length = length;
-        }
-
-
-        public void submitQuery (String query) {
+        public void submitQuery(String query) {
             NyaaNetworkRequest nyaaRequest = new NyaaNetworkRequest(Request.Method.GET, query,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
-                            Log.v(TAG, "" + response.length());
                             NyaaParser nyaaParser = new NyaaParser();
                             try {
-                                List<NyaaResult> nyaaResults = nyaaParser.parse(response);
-                                for (NyaaResult result : nyaaResults) {
-                                    Log.v(TAG, result.toString());
-                                }
+                                nyaaResults = (ArrayList<NyaaResult>) nyaaParser.parse(response);
+                                notifyDataSetChanged();
                             } catch (XmlPullParserException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
@@ -157,7 +199,6 @@ public class NyaaListFragment extends Fragment {
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Log.v(TAG, "Failed to get nyaa list");
                             Log.v(TAG, error.getMessage());
                         }
                     });

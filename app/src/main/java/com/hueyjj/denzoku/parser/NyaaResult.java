@@ -4,18 +4,18 @@ import java.io.Serializable;
 
 public class NyaaResult implements Serializable {
 
-    private final String title;
-    private final String torrentLink;
-    private final String guid;
-    private final String pubDate;
-    private final String seeders;
-    private final String leechers;
-    private final String downloads;
-    private final String infoHash;
-    private final String categoryId;
-    private final String category;
-    private final String size;
-    private final String description;
+    public final String title;
+    public final String torrentLink;
+    public final String guid;
+    public final String pubDate;
+    public final String seeders;
+    public final String leechers;
+    public final String downloads;
+    public final String infoHash;
+    public final String categoryId;
+    public final String category;
+    public final String size;
+    public final String description;
 
     public NyaaResult(String title,
                       String torrentLink,
