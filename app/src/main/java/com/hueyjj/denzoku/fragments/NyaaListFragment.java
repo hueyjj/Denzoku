@@ -22,10 +22,14 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 import com.hueyjj.denzoku.BuildConfig;
+import com.hueyjj.denzoku.NyaaActivity;
 import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.downloader.TorrentRequest;
 import com.hueyjj.denzoku.network.NyaaNetworkRequest;
+import com.hueyjj.denzoku.parser.MalEntry;
 import com.hueyjj.denzoku.parser.NyaaParser;
+import com.hueyjj.denzoku.parser.NyaaQuery;
+import com.hueyjj.denzoku.parser.NyaaQueryBuilder;
 import com.hueyjj.denzoku.parser.NyaaResult;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -42,15 +46,26 @@ public class NyaaListFragment extends Fragment {
     private ArrayList<NyaaResult> nyaaResult;
     private ContentAdapter adapter;
 
+    private MalEntry malEntry;
+    private int episodeNum;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-//        nyaaResult = (MalEntry) getArguments().get(NyaaActivity.MAL_ENTRY);
+        malEntry = (MalEntry) getArguments().get(NyaaActivity.MAL_ENTRY);
+        episodeNum = (int) getArguments().get(NyaaActivity.EPISODE_NUM);
+
 
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(
                 R.layout.recycler_view, container, false);
 
         adapter = new ContentAdapter(recyclerView.getContext());
+        NyaaQuery nyaaQuery = new NyaaQueryBuilder()
+                .query(malEntry.seriesTitle + "+" + episodeNum)
+                .sort(NyaaQuery.Sort.SEEDERS)
+                .pageNum("0")
+                .buildNyaaQuery();
+        adapter.submitQuery(nyaaQuery.toString());
 
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -181,6 +196,7 @@ public class NyaaListFragment extends Fragment {
         }
 
         public void submitQuery(String query) {
+            Log.v(TAG, "query: " + query);
             NyaaNetworkRequest nyaaRequest = new NyaaNetworkRequest(Request.Method.GET, query,
                     new Response.Listener<String>() {
                         @Override
@@ -199,7 +215,7 @@ public class NyaaListFragment extends Fragment {
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Log.v(TAG, error.getMessage());
+                            Log.v(TAG, "Something went wrong with the query. " + error.getMessage());
                         }
                     });
             queue.add(nyaaRequest);

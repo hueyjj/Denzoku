@@ -9,21 +9,25 @@ public class NyaaQuery {
     private Sort sort;
     private String page;
     private String pageNum;
+    private String[] tags;
 
     public NyaaQuery(String query,
                      Sort sort,
                      String page,
-                     String pageNum) {
+                     String pageNum,
+                     String[] tags) {
         this.query = query;
         this.sort = sort;
         this.page = page;
         this.pageNum = pageNum;
+        this.tags = tags;
     }
 
     @Override
     public String toString() {
+        String tt = TextUtils.join("+", this.tags);
         String[] params = new String[] {
-                "q=" + this.query,
+                "q=" + this.query + "+" + tt,
                 "s=" + this.sort.toString(),
                 "page=" + this.page,
                 "p=" + this.pageNum,

@@ -6,12 +6,13 @@ public class NyaaQueryBuilder {
     private NyaaQuery.Sort sort = NyaaQuery.Sort.SEEDERS;
     private String page = "rss";
     private String pageNum = "0";
+    private String[] tags = new String[]{"HorribleSubs", "480p"};
 
     public NyaaQueryBuilder() {
     }
 
     public NyaaQuery buildNyaaQuery() {
-        return new NyaaQuery(query, sort, page, pageNum);
+        return new NyaaQuery(query, sort, page, pageNum, tags);
     }
 
     public NyaaQueryBuilder query(String query) {
