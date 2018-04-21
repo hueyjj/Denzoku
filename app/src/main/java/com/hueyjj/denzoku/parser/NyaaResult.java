@@ -3,8 +3,10 @@ package com.hueyjj.denzoku.parser;
 import java.io.Serializable;
 
 public class NyaaResult implements Serializable {
+
     private final String title;
     private final String torrentLink;
+    private final String guid;
     private final String pubDate;
     private final String seeders;
     private final String leechers;
@@ -17,6 +19,7 @@ public class NyaaResult implements Serializable {
 
     public NyaaResult(String title,
                       String torrentLink,
+                      String guid,
                       String pubDate,
                       String seeders,
                       String leechers,
@@ -28,6 +31,7 @@ public class NyaaResult implements Serializable {
                       String description) {
         this.title = title;
         this.torrentLink = torrentLink;
+        this.guid = guid;
         this.pubDate = pubDate;
         this.seeders = seeders;
         this.leechers = leechers;
@@ -42,6 +46,7 @@ public class NyaaResult implements Serializable {
     public String toFormattedString() {
         return "Title: " + this.title + "\n"
                 + "Torrent link: " + this.torrentLink + "\n"
+                + "Guid: " + this.guid + "\n"
                 + "Pub date: " + this.pubDate + "\n"
                 + "Seeders: " + this.seeders + "\n"
                 + "Leechers: " + this.leechers + "\n"
@@ -57,6 +62,7 @@ public class NyaaResult implements Serializable {
     public String toString() {
         return  this.title + ", "
                 + this.torrentLink + ", "
+                + this.guid + ", "
                 + this.pubDate + ", "
                 + this.seeders + ", "
                 + this.leechers + ", "

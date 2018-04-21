@@ -21,9 +21,14 @@ import com.hueyjj.denzoku.NyaaActivity;
 import com.hueyjj.denzoku.R;
 import com.hueyjj.denzoku.network.NyaaNetworkRequest;
 import com.hueyjj.denzoku.parser.MalEntry;
+import com.hueyjj.denzoku.parser.NyaaParser;
 import com.hueyjj.denzoku.parser.NyaaResult;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class NyaaListFragment extends Fragment {
 
@@ -136,7 +141,17 @@ public class NyaaListFragment extends Fragment {
                         @Override
                         public void onResponse(String response) {
                             Log.v(TAG, "" + response.length());
-                            Log.v(TAG, response);
+                            NyaaParser nyaaParser = new NyaaParser();
+                            try {
+                                List<NyaaResult> nyaaResults = nyaaParser.parse(response);
+                                for (NyaaResult result : nyaaResults) {
+                                    Log.v(TAG, result.toString());
+                                }
+                            } catch (XmlPullParserException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     },
                     new Response.ErrorListener() {
